@@ -2,6 +2,7 @@ import sys
 import math
 from RandomNumberGenerator import RandomNumberGenerator
 from Process import Process
+from PriorityQueue import PriorityQueue
 
 '''
 Checks the arguments user is passing through.
@@ -77,11 +78,11 @@ Calculates values needed to find averages
  - Returns: tuple
     a tuple of total cpu burst time, total io burst time, and number of cpu bursts
 '''
-def populateProcess( process_type: str, curr_process: Process ):
+def populateProcess( lambda_param: float, upperBound: int, process_type: str, curr_process: Process ):
     TOTAL_cpu_burst_time = 0.0
     TOTAL_IO_burst_time = 0.0
 
-    arrival_time = math.floor(next_exp(lambda_param,upperBound ))
+    arrival_time = math.floor( next_exp( lambda_param,upperBound ) )
     cpu_bursts = math.ceil(rng.drand48(rng) * 32)
 
     curr_process.defineProcessType(process_type)
@@ -105,14 +106,37 @@ def populateProcess( process_type: str, curr_process: Process ):
             curr_process.addIOBurstTime(io_burst_time)
             TOTAL_IO_burst_time += io_burst_time
                 
-            print(f"==> CPU burst {cpu_burst_time:.0F}ms ==> I/O burst {io_burst_time}ms")
-        else:
-            print(f"==> CPU burst {cpu_burst_time:.0F}ms")
+        #     print(f"==> CPU burst {cpu_burst_time:.0F}ms ==> I/O burst {io_burst_time}ms")
+        # else:
+        #     print(f"==> CPU burst {cpu_burst_time:.0F}ms")
 
 def FCFS( processes: list ):
     return
 
+
+'''
+1. a process arrives
+2. a process starts using the cpu
+3. a process finishes using the cpu
+4. recalculate its tau value
+5. process preemption
+6. start the process io burst
+7. finish the process io burst
+8. loop until last cpu burst
+'''
 def SJF( processes: list ):
+    pq = PriorityQueue()
+    total_time = 0
+    Process_arrival_time = 0
+    Process_starts_using_CPU_time = 0
+    Process_finishes_using_CPU_time = 0
+    Process_starts_IO_burst_time = 0
+    Process_finishes_IO_burst_time = 0
+    
+
+    print( f"time {total_time}ms: Simulator started for SJF {pq}" )
+    
+
     return
 
 def SRT( processes: list ):
@@ -142,7 +166,10 @@ if __name__ == "__main__":
     seed = int(sys.argv[3]) 
     lambda_param = float(sys.argv[4])  
     upperBound = int(sys.argv[5]) 
-
+    Tcs = int( sys.argv[6] )
+    alpha = float( sys.argv[7] )
+    Tslice = int( sys.argv[8] )
+    
     s = "es" if ncpu > 1 else ''
     print(f"<<< -- process set (n={n}) with {ncpu} CPU-bound process{s}")
     print(f"<<< -- seed={seed}; lambda={lambda_param:.6f}; bound={upperBound}")
@@ -150,7 +177,7 @@ if __name__ == "__main__":
     # Generate process IDs
     process_ids = generate_process_ids(n)
     rng = RandomNumberGenerator
-    rng.srand48(rng,seed)
+    rng.srand48(rng, seed)
 
     # Variables needed to calculate averages
     CPU_bound_CPU_burst_time_total = 0.0
@@ -169,7 +196,7 @@ if __name__ == "__main__":
 
         curr_process = process_ids[ process ]
         process_type = "CPU-bound" if process + 1 <= ncpu else "I/O-bound"
-        populateProcess( process_type, curr_process )
+        populateProcess( lambda_param, upperBound, process_type, curr_process )
         # For CPU-bound
         if process + 1 <= ncpu:
             CPU_bound_CPU_burst_time_total += sum( curr_process.cpu_burst_times )
@@ -220,8 +247,9 @@ if __name__ == "__main__":
     alpha = float( sys.argv[7] )
     Tslice = int( sys.argv[8] )
 
-    print( "<<< PROJECT PART II\n" )
-    print( f"<<< -- t_cs={Tcs}; alpha={alpha}; t_slice={Tslice}ms\n")
+    print()
+    print( "<<< PROJECT PART II" )
+    print( f"<<< -- t_cs={Tcs}; alpha={alpha}; t_slice={Tslice}ms")
 
-    
+    SJF( process_ids )
 
