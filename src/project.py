@@ -1,6 +1,7 @@
 import sys
 import math
 from RandomNumberGenerator import RandomNumberGenerator
+from Process import Process
 
 '''
 Checks the arguments user is passing through.
@@ -8,13 +9,16 @@ Checks the arguments user is passing through.
  - Returns: None
 '''
 def arg_checking():
-    if len( sys.argv ) != 6:
-        print( "ERROR: <python script.py n ncpu seed lambda upperBound>\n", file = sys.stderr )
+    if len( sys.argv ) != 9:
+        print( "ERROR: <python script.py n ncpu seed lambda upperBound Tcs alpha Tslice>\n", file = sys.stderr )
         sys.exit(1)
     n = int( sys.argv[1] )
     ncpu = int( sys.argv[2] )    
     lambda_param = float( sys.argv[4] )
     upperBound = int( sys.argv[5] )
+    Tcs = int( sys.argv[6] )
+    alpha = float( sys.argv[7] )
+    Tslice = int( sys.argv[8] )
     if( n > 260 or n <= 0):
         print( "ERROR: <invalid number of processes>\n", file = sys.stderr )
         sys.exit( 1 )
@@ -26,6 +30,15 @@ def arg_checking():
         sys.exit( 1 )
     if( upperBound <= 0 ):
         print( "ERROR: <invalid upperbound>\n", file = sys.stderr )
+        sys.exit( 1 )
+    if( Tcs <= 0 or Tcs % 2 == 1 ):
+        print( "ERROR: <invalid Tcs>\n", file=sys.stderr )
+        sys.exit( 1 )
+    if( alpha < 0.0 or alpha > 1.0 ):
+        print( "ERROR: <invalid alpha>\n", file=sys.stderr )
+        sys.exit( 1 )
+    if( Tslice <= 0 ):
+        print( "ERROR: <invalid Tslice>\n", file=sys.stderr )
         sys.exit( 1 )
 
 '''
@@ -53,7 +66,7 @@ def generate_process_ids( n: int ) -> list:
     for i in range(n):
         letter = chr(65 + (i // 10)) 
         number = i % 10
-        process_ids.append(f"{letter}{number}")
+        process_ids.append(Process(f"{letter}{number}"))
     return process_ids
 '''
 Calculates values needed to find averages
@@ -64,33 +77,50 @@ Calculates values needed to find averages
  - Returns: tuple
     a tuple of total cpu burst time, total io burst time, and number of cpu bursts
 '''
-def processCalculations( process_type: str, process_id: str ) -> ( float, float, int ):
+def populateProcess( process_type: str, curr_process: Process ):
     TOTAL_cpu_burst_time = 0.0
     TOTAL_IO_burst_time = 0.0
 
     arrival_time = math.floor(next_exp(lambda_param,upperBound ))
     cpu_bursts = math.ceil(rng.drand48(rng) * 32)
 
+    curr_process.defineProcessType(process_type)
+    curr_process.defineArrivalTime(arrival_time)
+    curr_process.defineCpuBursts(cpu_bursts)
+
     s = 's' if cpu_bursts > 1 else ''
-    print(f"{process_type} process {process_ids[process-1]}: arrival time {arrival_time}ms; {cpu_bursts} CPU burst{s}:")
+    print(f"{process_type} process {curr_process.process_name}: arrival time {arrival_time}ms; {cpu_bursts} CPU burst{s}:")
     
     for i in range( cpu_bursts ):
         cpu_burst_time = math.ceil(next_exp(lambda_param, upperBound))        
         if( process_type == "CPU-bound" ):
             cpu_burst_time *= 4
+        curr_process.addCpuBurstTime(cpu_burst_time)
         TOTAL_cpu_burst_time += cpu_burst_time
 
         if i < cpu_bursts - 1: 
             io_burst_time = math.ceil(next_exp(lambda_param, upperBound))
             if( process_type == "I/O-bound" ):
                 io_burst_time *= 8
+            curr_process.addIOBurstTime(io_burst_time)
             TOTAL_IO_burst_time += io_burst_time
                 
             print(f"==> CPU burst {cpu_burst_time:.0F}ms ==> I/O burst {io_burst_time}ms")
         else:
             print(f"==> CPU burst {cpu_burst_time:.0F}ms")
-     
-    return TOTAL_cpu_burst_time, TOTAL_IO_burst_time, cpu_bursts
+
+def FCFS( processes: list ):
+    return
+
+def SJF( processes: list ):
+    return
+
+def SRT( processes: list ):
+    return 
+
+def RR( processes: list ):
+    return 
+
 
 '''
 Round the float to three decimal places
@@ -135,21 +165,22 @@ if __name__ == "__main__":
     average_CPU_burst_time = 0
     average_IO_burst_time = 0
 
-    for process in range(1,len(process_ids)+1):
+    for process in range(len(process_ids)):
 
+        curr_process = process_ids[ process ]
+        process_type = "CPU-bound" if process + 1 <= ncpu else "I/O-bound"
+        populateProcess( process_type, curr_process )
         # For CPU-bound
-        if process <= ncpu:
-            TOTAL_cpu_burst_time, TOTAL_IO_burst_time, cpu_bursts = processCalculations( "CPU-bound", process_ids[process - 1] )
-            CPU_bound_CPU_burst_time_total += TOTAL_cpu_burst_time
-            CPU_bound_IO_burst_time_total += TOTAL_IO_burst_time
-            CPU_bound_CPU_burst_total += cpu_bursts
+        if process + 1 <= ncpu:
+            CPU_bound_CPU_burst_time_total += sum( curr_process.cpu_burst_times )
+            CPU_bound_IO_burst_time_total += sum( curr_process.io_burst_times )
+            CPU_bound_CPU_burst_total += curr_process.cpu_bursts
 
         # For I/O-bound
         else:
-            TOTAL_cpu_burst_time, TOTAL_IO_burst_time, cpu_bursts = processCalculations( "I/O-bound", process_ids[process - 1] )
-            IO_bound_CPU_burst_time_total += TOTAL_cpu_burst_time
-            IO_bound_IO_burst_time_total += TOTAL_IO_burst_time
-            IO_bound_CPU_burst_total += cpu_bursts
+            IO_bound_CPU_burst_time_total += sum( curr_process.cpu_burst_times )
+            IO_bound_IO_burst_time_total += sum( curr_process.io_burst_times )
+            IO_bound_CPU_burst_total += curr_process.cpu_bursts
 
     # write the output into the simout.txt
     f = open( "simout.txt", "w")
@@ -179,4 +210,18 @@ if __name__ == "__main__":
 
     f.close()
 
+    """
+    '''''''''''''''''''''''''''''''''''
+    'EVERYTHING PAST HERE IS PROJECT 2'
+    '''''''''''''''''''''''''''''''''''
+    """
+
+    Tcs = int( sys.argv[6] )
+    alpha = float( sys.argv[7] )
+    Tslice = int( sys.argv[8] )
+
+    print( "<<< PROJECT PART II\n" )
+    print( f"<<< -- t_cs={Tcs}; alpha={alpha}; t_slice={Tslice}ms\n")
+
+    
 
