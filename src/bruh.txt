@@ -1,0 +1,92 @@
+<<< PROJECT PART I
+<<< -- process set (n=20) with 12 CPU-bound processes
+<<< -- seed=128; lambda=0.010000; bound=4096
+CPU-bound process A0: arrival time 45ms; 30 CPU bursts
+CPU-bound process A1: arrival time 47ms; 12 CPU bursts
+CPU-bound process A2: arrival time 92ms; 30 CPU bursts
+CPU-bound process A3: arrival time 324ms; 26 CPU bursts
+CPU-bound process A4: arrival time 157ms; 4 CPU bursts
+CPU-bound process A5: arrival time 130ms; 5 CPU bursts
+CPU-bound process A6: arrival time 29ms; 18 CPU bursts
+CPU-bound process A7: arrival time 54ms; 19 CPU bursts
+CPU-bound process A8: arrival time 62ms; 8 CPU bursts
+CPU-bound process A9: arrival time 41ms; 32 CPU bursts
+CPU-bound process B0: arrival time 45ms; 19 CPU bursts
+CPU-bound process B1: arrival time 9ms; 17 CPU bursts
+I/O-bound process B2: arrival time 46ms; 15 CPU bursts
+I/O-bound process B3: arrival time 271ms; 22 CPU bursts
+I/O-bound process B4: arrival time 2ms; 16 CPU bursts
+I/O-bound process B5: arrival time 140ms; 30 CPU bursts
+I/O-bound process B6: arrival time 102ms; 5 CPU bursts
+I/O-bound process B7: arrival time 30ms; 26 CPU bursts
+I/O-bound process B8: arrival time 225ms; 20 CPU bursts
+I/O-bound process B9: arrival time 95ms; 11 CPU bursts
+
+<<< PROJECT PART II
+<<< -- t_cs=4ms; alpha=0.96; t_slice=64ms
+time 0ms: Simulator started for FCFS [Q empty]
+time 2ms: Process B4 arrived; added to ready queue [Q B4]
+time 4ms: Process B4 started using the CPU for 8ms burst [Q empty]
+B1
+
+time 9ms: Process B1 arrived; added to ready queue [Q B1]
+A6
+
+time 12ms: Process B4 completed a CPU burst; 15 bursts to go [Q B1]
+time 12ms: Process B4 switching out of CPU; blocking on I/O until time 982ms [Q B1]
+B7
+
+time 30ms: Process B7 arrived; added to ready queue [Q B7]
+time 32ms: Process B7 started using the CPU for 71ms burst [Q empty]
+A9
+
+time 41ms: Process A9 arrived; added to ready queue [Q A9]
+A0
+
+time 45ms: Process A0 arrived; added to ready queue [Q A0]
+B0
+
+time 45ms: Process B0 arrived; added to ready queue [Q B0]
+B2
+
+time 46ms: Process B2 arrived; added to ready queue [Q B2]
+A1
+
+time 47ms: Process A1 arrived; added to ready queue [Q A1]
+A7
+
+time 54ms: Process A7 arrived; added to ready queue [Q A7]
+A8
+
+time 62ms: Process A8 arrived; added to ready queue [Q A8]
+A2
+
+time 92ms: Process A2 arrived; added to ready queue [Q A2]
+B9
+
+time 95ms: Process B9 arrived; added to ready queue [Q B9]
+B6
+
+time 102ms: Process B6 arrived; added to ready queue [Q B6]
+A5
+
+time 103ms: Process B7 completed a CPU burst; 25 bursts to go [Q B7, A9, A0, B0, B2, A1, A7, A8, A2, B9, B6]
+time 103ms: Process B7 switching out of CPU; blocking on I/O until time 3153ms [Q B7, A9, A0, B0, B2, A1, A7, A8, A2, B9, B6]
+B5
+
+time 140ms: Process B5 arrived; added to ready queue [Q B5]
+time 142ms: Process B5 started using the CPU for 20ms burst [Q empty]
+A4
+
+time 157ms: Process A4 arrived; added to ready queue [Q A4]
+B8
+
+time 162ms: Process B5 completed a CPU burst; 29 bursts to go [Q A9, A0, B0, B2, A1, A7, A8, A2, B9, B6, B5, A4]
+time 162ms: Process B5 switching out of CPU; blocking on I/O until time 412ms [Q A9, A0, B0, B2, A1, A7, A8, A2, B9, B6, B5, A4]
+B3
+
+time 271ms: Process B3 arrived; added to ready queue [Q B3]
+time 273ms: Process B3 started using the CPU for 51ms burst [Q empty]
+A3
+
+time 324ms: Process A3 arrived; added to ready queue [Q A3]
