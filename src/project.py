@@ -110,70 +110,271 @@ def populateProcess( lambda_param: float, upperBound: int, process_type: str, cu
         # else:
         #     print(f"==> CPU burst {cpu_burst_time:.0F}ms")
 
-def FCFS( processes: list ):
-    return
-            
-        #     print(f"==> CPU burst {cpu_burst_time:.0F}ms ==> I/O burst {io_burst_time}ms")
-        # else:
-        #     print(f"==> CPU burst {cpu_burst_time:.0F}ms")
 '''
 - First Come First Serve
 - Creates map of all processes 
 - Updates maps and objects
 '''
-def FCFS(processes: list, switchTime: int):
+def FCFS(processes: list, switchTime: int, current_time:int):
+    current_time = current_time
+
     print("time 0ms: Simulator started for FCFS [Q empty]")
     # Check if CPU is busy
-    isFullCpu = 0
-
+    fakeCPU = []
     # Keys are time, values are objects
     processDict = {}
-
     readyQueue = []
-
-    currentTime = 0
+    arrivalsequence = True
+    blocking = {}
+    def ioChecker(blocking, currentTime):
+        for process in blocking:
+            if blocking[process] < currentTime:
+                print(f"time {currentTime}ms: Process {process.process_name} completed I/O; added to ready queue [Q {' '.join([q.process_name for q in readyQueue])}]")
+                readyQueue.append(process)
+                del blocking[process]
+        return blocking
+     
+    
 
     # Sort to find smallest process
     processes.sort(key=lambda process: process.arrival_time)
-
-    # This for-loop will only last until all processes have arrived.
-    for process in processes:
-        if processDict:
-            print(f"{process.process_name}\n")
-            min_time = min(processDict)
-            processArrival = process.arrival_time
-            if min_time < processArrival:
-                min_process = processDict[min_time]
-                if len(min_process.cpu_burst_times) > 0:
-                    readyQueue.pop(0)
-                    if len(min_process.cpu_burst_times) > 1:
-                        print(f"time {min_time}ms: Process {min_process.process_name} completed a CPU burst; {len(min_process.cpu_burst_times)} bursts to go [Q {', '.join([q.process_name for q in readyQueue])}]")
-                    else:
-                         print(f"time {min_time}ms: Process {min_process.process_name} completed a CPU burst; {len(min_process.cpu_burst_times)} burst to go [Q {', '.join([q.process_name for q in readyQueue])}]")
-                    min_process.cpu_burst_times.pop(0)
-                    relaxTime = min_time + min_process.io_burst_times[0] + 2
-                    processDict[relaxTime] = min_process
-                    del processDict[min_time]
-                    print(f"time {min_time}ms: Process {min_process.process_name} switching out of CPU; blocking on I/O until time {relaxTime}ms [Q {', '.join([q.process_name for q in readyQueue])}]")
-                    isFullCpu = 0
-                    continue
-                else:
-                    print(f"time {min_time}ms: Process {min_process.process_name} terminated [Q empty]")
-                    del processDict[min_time]
-                    
-                isFullCpu = 1
     
-        print(f"time {process.arrival_time}ms: Process {process.process_name} arrived; added to ready queue [Q {process.process_name}]")
-        readyQueue.append(process)
-        # Check if CPU is empty
-        if isFullCpu == 0:
-            processTime = process.arrival_time + int(switchTime/2)
-            processDict[processTime] = process
-            print(f"time {processTime}ms: Process {process.process_name} started using the CPU for {process.cpu_burst_times[0]}ms burst [Q empty]")
-            processDict[processTime + process.cpu_burst_times[0]] = process
-            del processDict[processTime]
-            process.cpu_burst_times.pop(0)
-            isFullCpu = 1
+    # Make all process in dictionary
+    for process in processes:
+        processDict[process] = process.arrival_time
+    
+    
+    # Do until no more processes
+    while len(processDict)!= 0:
+        if arrivalsequence == True:
+            for process in processDict:
+                # Check if process is first time
+                if process.isFirstTime():
+                    readyQueue.append(process)
+                    process.changeFirst()
+                    current_time = process.arrival_time
+                    ioChecker(blocking, current_time)
+                    print(f"time {process.arrival_time}ms: Process {process.process_name} arrived; added to ready queue [Q {' '.join([q.process_name for q in readyQueue])}]")
+                    ioChecker(blocking, current_time)
+                    if not fakeCPU:
+                        fakeCPU.append(process)
+                        readyQueue.pop(0)
+                        processDict[process] += int(switchTime/2)
+                        current_time = processDict[process]
+                        ioChecker(blocking, current_time)
+                        print(f"time {processDict[process]}ms: Process {process.process_name} started using the CPU for {process.cpu_burst_times[0]}ms burst [Q empty]")
+                        ioChecker(blocking, current_time)
+                        if all(value < processDict[process] + process.cpu_burst_times[0] for value in processDict.values()):
+                            processDict = {key: processDict[process] + process.cpu_burst_times[0] for key in processDict}
+                        current_time = processDict[process]
+                        process.cpu_burst_times.pop(0)
+            arrivalsequence = False
+        else:
+            if fakeCPU:
+                current_time = processDict[fakeCPU[0]]
+                ioChecker(blocking, current_time)
+                print(f"time {processDict[fakeCPU[0]]}ms: Process {fakeCPU[0].process_name} completed a CPU burst; {len(fakeCPU[0].cpu_burst_times)} bursts to go [Q {' '.join([q.process_name for q in readyQueue])}]")
+                blockingTime = fakeCPU[0].io_burst_times[0] + processDict[fakeCPU[0]] + int(switchTime/2)   
+                current_time = processDict[fakeCPU[0]]
+                print(f"time {processDict[fakeCPU[0]]}ms: Process {fakeCPU[0].process_name} switching out of CPU; blocking on I/O until time {blockingTime}ms [Q {' '.join([q.process_name for q in readyQueue])}]")
+                fakeCPU[0].io_burst_times.pop(0)
+                blocking[process] = blockingTime
+                processDict = {key: processDict[process] + int(switchTime/2) for key in processDict}
+                processDict[fakeCPU[0]] = blockingTime
+                fakeCPU.pop(0)
+            else:
+                ioChecker(blocking, current_time)
+                fakeCPU.append(readyQueue[0])
+                readyQueue.pop(0)
+                processDict[fakeCPU[0]] += int(switchTime/2)
+                current_time = processDict[fakeCPU[0]]
+                print(f"time {processDict[fakeCPU[0]]}ms: Process {fakeCPU[0].process_name} started using the CPU for {fakeCPU[0].cpu_burst_times[0]}ms burst [Q empty]")
+                processDict = {key: processDict[process] + process.cpu_burst_times[0] for key in processDict}
+                fakeCPU[0].cpu_burst_times.pop(0)
+            
+            # processDict[process] += process.cpu_burst_times[0]
+            # print(f"time {process.arrival_time}ms: Process {process.process_name} started using the CPU for {process.cpu_burst_times[0]}ms burst [Q empty]")
+            # fakeCPU.append(process)
+            # process.cpu_burst_times.pop(0)
+            # readyQueue.pop(0)
+        
+
+
+        # # arriving bursts
+        # for process in processDict:
+        #     if len(fakeCPU) == 0:
+        #         processTime = processDict[process]
+        #         print(f"time {processTime}ms: Process {process.process_name} arrived; added to ready queue [Q {' '.join([q.process_name for q in readyQueue])}]")
+        #         processDict[process] = processTime + process.cpu_burst_times[0]
+        #         print(f"time {processTime}ms: Process {process.process_name} started using the CPU for {process.cpu_burst_times[0]}ms burst [Q empty]")
+        #         fakeCPU.append(process)
+        #         process.cpu_burst_times.pop(0)
+        #         readyQueue.pop(0)
+        #     else:
+        #         continue
+        # for process in processDict:
+        #     if processDict[process] == 0:
+        #         print(f"time {processDict[process]}ms: Process {process.process_name} terminated [Q empty]")
+        #         del processDict[process]
+        #     else:
+        #         processDict[process] -= 1
+        #         continue
+
+
+
+    # for process in processDict:
+    #     if len(process.cpu_burst_times)> 0:
+    #         readyQueue.append(process)
+    #         print(f"time {processDict[process]}ms: Process {process.process_name} arrived; added to ready queue [Q {' '.join([q.process_name for q in readyQueue])}]")
+    #         processTime = processDict[process]
+    #         processDict[process] = processTime + process.cpu_burst_times[0]
+         
+    #         if len(fakeCPU) == 0:
+    #             print(f"time {processTime}ms: Process {process.process_name} started using the CPU for {process.cpu_burst_times[0]}ms burst [Q empty]")
+    #             fakeCPU.append(process)
+    #             process.cpu_burst_times.pop(0)
+    #             readyQueue.pop(0)
+    #         else:
+    #             continue
+
+
+
+    #     processTime = processDict[process]
+    #     readyQueue.append(process)
+    #     # Check readyQueue is empty
+    #     if readyQueue:
+    #         print(f"time {processTime}ms: Process {process.process_name} arrived; added to ready queue [Q {' '.join([q.process_name for q in readyQueue])}]")
+    #     else:  
+    #         print(f"time {processTime}ms: Process {process.process_name} arrived; added to ready queue [Q empty]")
+    #     # Check if CPU is free
+    #     if len(fakeCPU) == 0:
+    #         readyQueue.pop(0)
+    #         processTime += int(switchTime/2)
+    #         print(f"time {processTime}ms: Process {process.process_name} started using the CPU for {process.cpu_burst_times[0]}ms burst [Q empty]")
+    #         processDict[process] = processTime + process.cpu_burst_times[0]
+    #         process.cpu_burst_times.pop(0)
+    #         fakeCPU.append(process)
+    #     else:
+    #         # future things
+    #         continue
+
+    # # After all things have arrived, we check process in CPU if done yet
+
+    # for process in processDict:
+    #     if len(fakeCPU) ==  1:
+    #         print(f"time {processDict[fakeCPU[0]]}ms: Process {fakeCPU[0].process_name} completed a CPU burst; {len(fakeCPU[0].cpu_burst_times)} bursts to go [Q {' '.join([q.process_name for q in readyQueue])}]")
+    #         blockingTime = process.io_burst_times[0] + processDict[process]+ int(switchTime/2)
+    #         process.cpu_burst_times.pop(0)
+    #         print(f"time {processDict[process]}ms: Process {process.process_name} switching out of CPU; blocking on I/O until time {blockingTime}ms [Q {' '.join([q.process_name for q in readyQueue])}]")
+    #         # update the time of the process in dictionary and add it to blocking 
+    #         # compare to blocking after each process iteration
+    #         blocking.append(process)
+
+    # def burstChecker(process):
+    #     if process.cpu_burst_times > 0:
+    #         return True
+    #     return False
+        
+ 
+            # fakeCPU.pop(0)
+            # currentTime = processDict[fakeCPU[0]]
+
+            
+
+        # if process.incpu == 1:
+        #     print(f"time {processDict[process]}ms: Process {process.process_name} completed a CPU burst; {len(process.cpu_burst_times)} bursts to go [Q {' '.join([q.process_name for q in readyQueue])}]")
+        #     process.incpu = 0
+        #     blockingTime = process.io_burst_times[0] + processDict[process]+ int(switchTime/2)
+        #     currentTime = processDict[process]
+        #     print(f"time {processDict[process]}ms: Process {process.process_name} switching out of CPU burst; blocking on I/O until time {blockingTime}ms [Q {' '.join([q.process_name for q in readyQueue])}]")    
+        #     continue
+        # if readyQueue:
+        #     transitionTime = currentTime + int(switchTime)
+        #     readyQueue.pop(0)
+        #     print(f"time {transitionTime}ms: Process {process.process_name} started using the CPU for {process.cpu_burst_times[0]}ms burst [Q {' '.join([q.process_name for q in readyQueue])}]")
+        #     process.incpu = 1
+
+
+
+      
+            
+
+
+
+        #         readyQueue.append(processDict[process].process_name)
+        #        
+        #         newTime =  processTime + processDict[processTime].cpu_burst_times[0] + int(switchTime/2)
+        #         print(f"{newTime}")
+        #         del processDict[processTime]
+        #         processDict[newTime] = process
+        #         print(f"{processDict[newTime]}")
+
+                # processDict[newTime].cpu_burst_times.pop(0)
+                # processDict[processTime].incpu = 1
+                # print(f"{processDict[processTime]}")
+                # del processDict[processTime]
+
+
+       
+           
+            
+
+        #      do something
+        # for process in processDict:
+        #     if processDict[process].incpu == 1:
+        #         processDict[process].cpu_burst_times.pop(0)
+        #         print(f"time {min_time}ms: Process {min_process.process_name} completed a CPU burst; {len(min_process.cpu_burst_times)} bursts to go [Q {' '.join([q.process_name for q in readyQueue])}]")
+    # This for-loop will only last until all processes have arrived.
+   
+        
+
+
+        # if processDict:
+        #     min_time = min(processDict)
+        #     processArrival = process.arrival_time
+        #     if min_time < processArrival:
+        #         min_process = processDict[min_time]
+        #         if len(min_process.cpu_burst_times) > 0:
+        #             readyQueue.pop(0)
+        #             if len(min_process.cpu_burst_times) > 1:
+        #                 print(f"time {min_time}ms: Process {min_process.process_name} completed a CPU burst; {len(min_process.cpu_burst_times)} bursts to go [Q {' '.join([q.process_name for q in readyQueue])}]")
+        #             else:
+        #                  print(f"time {min_time}ms: Process {min_process.process_name} completed a CPU burst; {len(min_process.cpu_burst_times)} burst to go [Q {' '.join([q.process_name for q in readyQueue])}]")
+        #             min_process.cpu_burst_times.pop(0)
+        #             min_process.incpu = 0
+        #             relaxTime = min_time + min_process.io_burst_times[0] + 2
+        #             processDict[relaxTime] = min_process
+        #             del processDict[min_time]
+        #             print(f"time {min_time}ms: Process {min_process.process_name} switching out of CPU; blocking on I/O until time {relaxTime}ms [Q {', '.join([q.process_name for q in readyQueue])}]")
+        #             isFullCpu = 0
+        #             continue
+        #         else:
+        #             print(f"time {min_time}ms: Process {min_process.process_name} terminated [Q empty]")
+        #             del processDict[min_time]
+                    
+        #     isFullCpu = 1
+
+        # readyQueue.append(process)
+        # print(f"time {process.arrival_time}ms: Process {process.process_name} arrived; added to ready queue [Q {' '.join([q.process_name for q in readyQueue])}]")
+        # # Check if CPU is empty
+        # if isFullCpu == 0:
+        #     processTime = process.arrival_time + int(switchTime/2)
+        #     processDict[processTime] = process
+        #     print(f"time {processTime}ms: Process {process.process_name} started using the CPU for {process.cpu_burst_times[0]}ms burst [Q empty]")
+        #     readyQueue.pop(0)
+        #     processDict[processTime + process.cpu_burst_times[0]] = process
+        #     process.incpu = 1
+        #     del processDict[processTime]
+        #     process.cpu_burst_times.pop(0)
+        #     isFullCpu = 1
+
+        # for process in processDict:
+        #     if processDict[process].incpu == 1:
+        #         processDict[process].cpu_burst_times.pop(0)
+        #         print(f"time {min_time}ms: Process {min_process.process_name} completed a CPU burst; {len(min_process.cpu_burst_times)} bursts to go [Q {' '.join([q.process_name for q in readyQueue])}]")
+                
+               
+
        
                
             # print(f"time {process.arrival_time}ms: Process {process.process_name} arrived; added to ready queue [Q {', '.join([q.process_name for q in readyQueue])}]")
@@ -351,13 +552,10 @@ if __name__ == "__main__":
     alpha = float( sys.argv[7] )
     Tslice = int( sys.argv[8] )
 
-    print()
-    print( "<<< PROJECT PART II" )
-    print( f"<<< -- t_cs={Tcs}; alpha={alpha}; t_slice={Tslice}ms")
     print( "\n<<< PROJECT PART II" )
     print( f"<<< -- t_cs={Tcs}ms; alpha={alpha}; t_slice={Tslice}ms")
 
-    FCFS(process_ids, Tcs)
+    FCFS(process_ids, Tcs, 0)
 
     SJF( process_ids )
 

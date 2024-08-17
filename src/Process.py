@@ -5,9 +5,10 @@ class Process:
         self.arrival_time = 0
         self.cpu_bursts = 0
         self.tau = 0
-
+        self.incpu = 0
         self.cpu_burst_times = []
         self.io_burst_times = []
+        self.firsttime = True
     
     def defineProcessType( self, process_type: str ):
         self.process_type = process_type
@@ -26,3 +27,8 @@ class Process:
     
     def addIOBurstTime( self, io_burst_time: int ):
         self.io_burst_times.append(io_burst_time)
+    
+    def isFirstTime(self):
+        return self.firsttime
+    def changeFirst(self):
+        self.firsttime = False
