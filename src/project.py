@@ -145,7 +145,7 @@ def FCFS(processes: list, switchTime: int, current_time:int):
         process.io_burst_times_remaining = process.io_burst_times
         processes_to_action_finish_time[process] = (process.arrival_time, "arrival")
         processes_in_action.append(process)
-    
+
     # Loop until all processes are finished
     while len(finished_processes) < len(processes):
         # processes are being processed, find which one finishes its action first
@@ -154,7 +154,6 @@ def FCFS(processes: list, switchTime: int, current_time:int):
             earliest_action = None
             next_process = None
             for process in processes_in_action:
-                print("logs", processes_to_action_finish_time[process])
                 finish_time, action = processes_to_action_finish_time[process]
                 if finish_time < earliest_finish_time:
                     earliest_finish_time = finish_time
@@ -164,43 +163,54 @@ def FCFS(processes: list, switchTime: int, current_time:int):
             processes_in_action.remove(next_process)
 
             if earliest_action == "arrival":
-                print(f"time {current_time}ms: Process {next_process.process_name} arrived; added to ready queue [Q {' '.join([q.process_name for q in processes_in_action])}]")
                 ready_queue.append(next_process)
+                print(f"time {current_time}ms: Process {next_process.process_name} arrived; added to ready queue [Q {' '.join([q.process_name for q in ready_queue])}]")
                 if cpu_process == None:
                     cpu_process = ready_queue[0]
                     ready_queue.pop(0)
                     processes_to_action_finish_time[cpu_process] = (current_time + cpu_process.cpu_burst_times_remaining[0], "cpu")
                     processes_in_action.append(cpu_process)
+                    current_time += int(switchTime/2)
+                    print(f"time {current_time}ms: Process {cpu_process.process_name} started using the CPU for {cpu_process.cpu_burst_times_remaining[0]}ms burst [Q empty]")
+                    cpu_process.cpu_burst_times_remaining.pop(0)
             elif earliest_action == "cpu":
                 # logic for unmounting a process from CPU
-                if next_process.io_burst_times_remaining:
-                    print(f"{next_process.cpu_burst_times_remaining[0]}")
-                    next_process.cpu_burst_times_remaining.pop(0)
+                if len(next_process.io_burst_times_remaining) > 0:
+                    current_time += int(switchTime/2)
                     print(f"time {current_time}ms: Process {next_process.process_name} completed a CPU burst; {len(next_process.cpu_burst_times_remaining)} bursts to go [Q {' '.join([q.process_name for q in processes_in_action])}]")
-                    processes_to_action_finish_time[next_process] = (current_time + next_process.io_burst_times_remaining[0], "io")
+                    current_time += int(switchTime/2)
+                    processes_to_action_finish_time[next_process] = (current_time + next_process.io_burst_times_remaining.pop(0), "io")
                     processes_in_action.append(next_process)
-
                 else:
                     print(f"time {current_time}ms: Process {process.process_name} terminated [Q {' '.join([q.process_name for q in processes_in_action])}]")
                     finished_processes.append(next_process)
 
+                cpu_process = None
                 if len(ready_queue)>0:
                     cpu_process = ready_queue[0]
                     ready_queue.pop(0)
-            else: # IO
-                next_process.io_burst_times_remaining.pop(0)
+                    current_time += int(switchTime/2)
+                    print(f"time {current_time}ms: Process {cpu_process.process_name} started using the CPU for {cpu_process.cpu_burst_times_remaining[0]}ms burst [Q empty]")
+                    processes_to_action_finish_time[cpu_process] = (current_time + cpu_process.cpu_burst_times_remaining[0], "cpu")
+                    processes_in_action.append(cpu_process)
+                    cpu_process.cpu_burst_times_remaining.pop(0)
+            else: # logic for when something completes IO
+                
                 print(f"time {current_time}ms: Process {next_process.process_name} completed I/O; added to ready queue [Q {' '.join([q.process_name for q in processes_in_action])}]")
                 ready_queue.append(next_process)
                 if not cpu_process:
                     cpu_process = ready_queue.pop(0)
+                    processes_to_action_finish_time[cpu_process] = (current_time + cpu_process.cpu_burst_times_remaining[0], "cpu")
+                    print(f"time {current_time}ms: Process {cpu_process.process_name} started using the CPU for {cpu_process.cpu_burst_times_remaining[0]}ms burst [Q empty]")
+                    processes_in_action.append(cpu_process)
+                    cpu_process.cpu_burst_times_remaining.pop(0)
                         
         # no processes are waiting on I/O, are being run, or are arriving, grab from ready queue
         elif len(ready_queue) > 0:
-            cpu_process = ready_queue[0]
+            cpu_process = ready_queue.pop(0)
             processes_to_action_finish_time[cpu_process] = (current_time + cpu_process.cpu_burst_times_remaining[0], "cpu")
             processes_in_action.append(cpu_process)
-            ready_queue.pop(0)
-           
+            current_time += int(switchTime/2)
             print(f"time {current_time}ms: Process {cpu_process.process_name} started using the CPU for {cpu_process.cpu_burst_times_remaining[0]}ms burst [Q empty]")
 
         else:
@@ -553,6 +563,8 @@ def FCFS(processes: list, switchTime: int, current_time:int):
 
 
                 
+
+
 
 
 '''
