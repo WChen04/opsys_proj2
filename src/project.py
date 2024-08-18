@@ -116,81 +116,166 @@ def populateProcess( lambda_param: float, upperBound: int, process_type: str, cu
 - Updates maps and objects
 '''
 def FCFS(processes: list, switchTime: int, current_time:int):
-    current_time = current_time
+    print(f"time 0ms: Simulator started for FCFS [Q empty]")
+    runningProcess = None
+    processesInAction = []   
+    finishedProcesses = []
+    processesToFinishTime = {}
+    nextProcess = None
 
-    print("time 0ms: Simulator started for FCFS [Q empty]")
-    # Check if CPU is busy
-    fakeCPU = []
-    # Keys are time, values are objects
-    processDict = {}
-    readyQueue = []
-    arrivalsequence = True
-    blocking = {}
-    def ioChecker(blocking, currentTime):
-        for process in blocking:
-            if blocking[process] < currentTime:
-                print(f"time {currentTime}ms: Process {process.process_name} completed I/O; added to ready queue [Q {' '.join([q.process_name for q in readyQueue])}]")
-                readyQueue.append(process)
-                del blocking[process]
-        return blocking
+    for process in processes:
+        process.cpu_burst_times_remaining = process.cpu_burst_times
+        process.io_burst_times_remaining = process.io_burst_times
+    
+    while len(finishedProcesses) < len(processes):
+        if (len(processesInAction) > 0):
+            earliestFinishTime = math.inf
+            for process in processesInAction:
+                if processesToFinishTime[process] < earliestFinishTime:
+                    earliestFinishTime = processesToFinishTime[process]
+                    nextProcess = process
+            current_time = earliestFinishTime
+            processesInAction.remove(nextProcess)
+
+            if nextProcess is runningProcess:
+                if nextProcess.io_burst_times_remaining:
+                    print(f"{nextProcess.cpu_burst_times_remaining[0]}")
+                    nextProcess.cpu_burst_times_remaining.pop(0)
+                    print(f"time {current_time}ms: Process {nextProcess.process_name} completed a CPU burst; {len(nextProcess.cpu_burst_times_remaining)} bursts to go [Q {' '.join([q.process_name for q in processesInAction])}]")
+                    processesToFinishTime[nextProcess] = current_time + nextProcess.io_burst_times_remaining[0]
+                    processesInAction.append(nextProcess)
+                else:
+                    print(f"time {current_time}ms: Process {process.process_name} terminated [Q {' '.join([q.process_name for q in processesInAction])}]")
+                    finishedProcesses.append(nextProcess)
+            else:
+                nextProcess.io_burst_times_remaining.pop(0)
+                print(f"time {current_time}ms: Process {nextProcess.process_name} completed I/O; added to ready queue [Q {' '.join([q.process_name for q in processesInAction])}]")
+                processesToFinishTime[nextProcess] = current_time + nextProcess.cpu_burst_times_remaining[0]
+                processesInAction.append(nextProcess)
+        else:
+            runningProcess = processes[0]
+            processesToFinishTime[runningProcess] = current_time + runningProcess.cpu_burst_times_remaining[0]
+            processesInAction.append(runningProcess)
+            print(f"time {current_time}ms: Process {runningProcess.process_name} started using the CPU for {runningProcess.cpu_burst_times_remaining[0]}ms burst [Q empty]")
+
+    # pseudo code implementation
+
+    # for process in processes:
+        # process.cpu_burst_times_remaining = process.cpu_burst_times
+        # process.io_burst_times_remaining = process.io_burst_times
+
+    # processesInAction = []
+    # runningProcess = None
+    # while (len(finishedProcesses) < len(processes)):
+        # if (len(processesInAction) > 0)
+            # earliestFinishTime = infinity (example)
+            # nextProcess = None
+            # for process in processesInAction:
+                # if processesToFinishTime[process] < earliestFinishTime:
+                    # earliestFinishTime = process
+                    # nextProcess = process
+
+            # now we know the next process to finish, update accordingly
+            # currTime = earliestFinishTime
+            # processesInAction.remove(process)
+            # if process is runningProcess:
+                # if it still has io_burst_times_remaining:
+                    # remove first cpu_burst_time value
+                    # print out stuff
+                    # processToFinishTime[process] = currTime + Process.io_burst_times_remaining[0]
+                    # processesInAction.add(process)
+                # else:
+                    # print out "terminated"
+            # else: (is waiting for I/O)
+                # remove first io_burst_time value
+                # print out stuff
+                # processToFinishTime[process] = currTime + Process.cpu_burst_times_remaining[0]
+                # processesInAction.add(process)
+
+
+        # Else, first step ever (no processes are waiting or being run, we run the first process in queue)
+            # runningProcess = P0
+            # processToFinishTime[P0] = currTime + P0.runTime
+            # processesInAction.add(P0), 
+   
+
+   
+
+
+    # current_time = current_time
+    # print("time 0ms: Simulator started for FCFS [Q empty]")
+    # # Process currently being run 
+    # inProgress = None
+    # # Keys are objects, values are time
+    # processDict = {}
+    # readyQueue = []
+    # arrivalsequence = True
+    # blocking = {}
+    # def ioChecker(blocking, currentTime):
+    #     for process in blocking:
+    #         if blocking[process] < currentTime:
+    #             print(f"time {currentTime}ms: Process {process.process_name} completed I/O; added to ready queue [Q {' '.join([q.process_name for q in readyQueue])}]")
+    #             readyQueue.append(process)
+    #             del blocking[process]
+    #     return blocking
      
     
 
-    # Sort to find smallest process
-    processes.sort(key=lambda process: process.arrival_time)
+    # # Sort to find smallest process
+    # processes.sort(key=lambda process: process.arrival_time)
     
-    # Make all process in dictionary
-    for process in processes:
-        processDict[process] = process.arrival_time
+    # # Make all process in dictionary
+    # for process in processes:
+    #     processDict[process] = process.arrival_time
     
     
-    # Do until no more processes
-    while len(processDict)!= 0:
-        if arrivalsequence == True:
-            for process in processDict:
-                # Check if process is first time
-                if process.isFirstTime():
-                    readyQueue.append(process)
-                    process.changeFirst()
-                    current_time = process.arrival_time
-                    ioChecker(blocking, current_time)
-                    print(f"time {process.arrival_time}ms: Process {process.process_name} arrived; added to ready queue [Q {' '.join([q.process_name for q in readyQueue])}]")
-                    ioChecker(blocking, current_time)
-                    if not fakeCPU:
-                        fakeCPU.append(process)
-                        readyQueue.pop(0)
-                        processDict[process] += int(switchTime/2)
-                        current_time = processDict[process]
-                        ioChecker(blocking, current_time)
-                        print(f"time {processDict[process]}ms: Process {process.process_name} started using the CPU for {process.cpu_burst_times[0]}ms burst [Q empty]")
-                        ioChecker(blocking, current_time)
-                        if all(value < processDict[process] + process.cpu_burst_times[0] for value in processDict.values()):
-                            processDict = {key: processDict[process] + process.cpu_burst_times[0] for key in processDict}
-                        current_time = processDict[process]
-                        process.cpu_burst_times.pop(0)
-            arrivalsequence = False
-        else:
-            if fakeCPU:
-                current_time = processDict[fakeCPU[0]]
-                ioChecker(blocking, current_time)
-                print(f"time {processDict[fakeCPU[0]]}ms: Process {fakeCPU[0].process_name} completed a CPU burst; {len(fakeCPU[0].cpu_burst_times)} bursts to go [Q {' '.join([q.process_name for q in readyQueue])}]")
-                blockingTime = fakeCPU[0].io_burst_times[0] + processDict[fakeCPU[0]] + int(switchTime/2)   
-                current_time = processDict[fakeCPU[0]]
-                print(f"time {processDict[fakeCPU[0]]}ms: Process {fakeCPU[0].process_name} switching out of CPU; blocking on I/O until time {blockingTime}ms [Q {' '.join([q.process_name for q in readyQueue])}]")
-                fakeCPU[0].io_burst_times.pop(0)
-                blocking[process] = blockingTime
-                processDict = {key: processDict[process] + int(switchTime/2) for key in processDict}
-                processDict[fakeCPU[0]] = blockingTime
-                fakeCPU.pop(0)
-            else:
-                ioChecker(blocking, current_time)
-                fakeCPU.append(readyQueue[0])
-                readyQueue.pop(0)
-                processDict[fakeCPU[0]] += int(switchTime/2)
-                current_time = processDict[fakeCPU[0]]
-                print(f"time {processDict[fakeCPU[0]]}ms: Process {fakeCPU[0].process_name} started using the CPU for {fakeCPU[0].cpu_burst_times[0]}ms burst [Q empty]")
-                processDict = {key: processDict[process] + process.cpu_burst_times[0] for key in processDict}
-                fakeCPU[0].cpu_burst_times.pop(0)
+    # # Do until no more processes
+    # while len(processDict)!= 0:
+    #     if arrivalsequence == True:
+    #         for process in processDict:
+    #             # Check if process is first time
+    #             if process.isFirstTime():
+    #                 readyQueue.append(process)
+    #                 process.changeFirst()
+    #                 current_time = process.arrival_time
+    #                 ioChecker(blocking, current_time)
+    #                 print(f"time {process.arrival_time}ms: Process {process.process_name} arrived; added to ready queue [Q {' '.join([q.process_name for q in readyQueue])}]")
+    #                 ioChecker(blocking, current_time)
+    #                 if not fakeCPU:
+    #                     fakeCPU.append(process)
+    #                     readyQueue.pop(0)
+    #                     processDict[process] += int(switchTime/2)
+    #                     current_time = processDict[process]
+    #                     ioChecker(blocking, current_time)
+    #                     print(f"time {processDict[process]}ms: Process {process.process_name} started using the CPU for {process.cpu_burst_times[0]}ms burst [Q empty]")
+    #                     ioChecker(blocking, current_time)
+    #                     if all(value < processDict[process] + process.cpu_burst_times[0] for value in processDict.values()):
+    #                         processDict = {key: processDict[process] + process.cpu_burst_times[0] for key in processDict}
+    #                     current_time = processDict[process]
+    #                     process.cpu_burst_times.pop(0)
+    #         arrivalsequence = False
+    #     else:
+    #         if fakeCPU:
+    #             current_time = processDict[fakeCPU[0]]
+    #             ioChecker(blocking, current_time)
+    #             print(f"time {processDict[fakeCPU[0]]}ms: Process {fakeCPU[0].process_name} completed a CPU burst; {len(fakeCPU[0].cpu_burst_times)} bursts to go [Q {' '.join([q.process_name for q in readyQueue])}]")
+    #             blockingTime = fakeCPU[0].io_burst_times[0] + processDict[fakeCPU[0]] + int(switchTime/2)   
+    #             current_time = processDict[fakeCPU[0]]
+    #             print(f"time {processDict[fakeCPU[0]]}ms: Process {fakeCPU[0].process_name} switching out of CPU; blocking on I/O until time {blockingTime}ms [Q {' '.join([q.process_name for q in readyQueue])}]")
+    #             fakeCPU[0].io_burst_times.pop(0)
+    #             blocking[process] = blockingTime
+    #             processDict = {key: processDict[process] + int(switchTime/2) for key in processDict}
+    #             processDict[fakeCPU[0]] = blockingTime
+    #             fakeCPU.pop(0)
+    #         else:
+    #             ioChecker(blocking, current_time)
+    #             fakeCPU.append(readyQueue[0])
+    #             readyQueue.pop(0)
+    #             processDict[fakeCPU[0]] += int(switchTime/2)
+    #             current_time = processDict[fakeCPU[0]]
+    #             print(f"time {processDict[fakeCPU[0]]}ms: Process {fakeCPU[0].process_name} started using the CPU for {fakeCPU[0].cpu_burst_times[0]}ms burst [Q empty]")
+    #             processDict = {key: processDict[process] + process.cpu_burst_times[0] for key in processDict}
+    #             fakeCPU[0].cpu_burst_times.pop(0)
             
             # processDict[process] += process.cpu_burst_times[0]
             # print(f"time {process.arrival_time}ms: Process {process.process_name} started using the CPU for {process.cpu_burst_times[0]}ms burst [Q empty]")

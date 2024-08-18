@@ -8,6 +8,8 @@ class Process:
         self.incpu = 0
         self.cpu_burst_times = []
         self.io_burst_times = []
+        self.cpu_burst_times_remaining = []
+        self.io_burst_times_remaining = []
         self.firsttime = True
     
     def defineProcessType( self, process_type: str ):

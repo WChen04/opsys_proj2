@@ -8,15 +8,54 @@ I/O-bound process A2: arrival time 821ms; 15 CPU bursts
 <<< PROJECT PART II
 <<< -- t_cs=4ms; alpha=0.75; t_slice=256ms
 time 0ms: Simulator started for FCFS [Q empty]
-time 319ms: Process A0 arrived; added to ready queue [Q A0]
-time 321ms: Process A0 started using the CPU for 1448ms burst [Q empty]
-time 506ms: Process A1 arrived; added to ready queue [Q A1]
-time 821ms: Process A2 arrived; added to ready queue [Q A1 A2]
-time 1769ms: Process A0 completed a CPU burst; 24 bursts to go [Q A1 A2]
-time 1769ms: Process A0 switching out of CPU; blocking on I/O until time 2379ms [Q A1 A2]
-time 1773ms: Process A1 started using the CPU for 971ms burst [Q empty]
-time 2179ms: Process A1 completed a CPU burst; 4 bursts to go [Q A2]
-time 2179ms: Process A1 switching out of CPU; blocking on I/O until time 2613ms [Q A2]
-time 2183ms: Process A2 started using the CPU for 408ms burst [Q empty]
-time 2591ms: Process A2 completed a CPU burst; 14 bursts to go [Q ]
-time 2591ms: Process A2 switching out of CPU; blocking on I/O until time 8105ms [Q ]
+time 0ms: Process A0 started using the CPU for 1448ms burst [Q empty]
+1448
+time 1448ms: Process A0 completed a CPU burst; 24 bursts to go [Q ]
+316
+time 2056ms: Process A0 completed a CPU burst; 23 bursts to go [Q ]
+3556
+time 2664ms: Process A0 completed a CPU burst; 22 bursts to go [Q ]
+2516
+time 3272ms: Process A0 completed a CPU burst; 21 bursts to go [Q ]
+732
+time 3880ms: Process A0 completed a CPU burst; 20 bursts to go [Q ]
+1872
+time 4488ms: Process A0 completed a CPU burst; 19 bursts to go [Q ]
+1020
+time 5096ms: Process A0 completed a CPU burst; 18 bursts to go [Q ]
+228
+time 5704ms: Process A0 completed a CPU burst; 17 bursts to go [Q ]
+2092
+time 6312ms: Process A0 completed a CPU burst; 16 bursts to go [Q ]
+3380
+time 6920ms: Process A0 completed a CPU burst; 15 bursts to go [Q ]
+1700
+time 7528ms: Process A0 completed a CPU burst; 14 bursts to go [Q ]
+664
+time 8136ms: Process A0 completed a CPU burst; 13 bursts to go [Q ]
+916
+time 8744ms: Process A0 completed a CPU burst; 12 bursts to go [Q ]
+1988
+time 9352ms: Process A0 completed a CPU burst; 11 bursts to go [Q ]
+3948
+time 9960ms: Process A0 completed a CPU burst; 10 bursts to go [Q ]
+340
+time 10568ms: Process A0 completed a CPU burst; 9 bursts to go [Q ]
+2768
+time 11176ms: Process A0 completed a CPU burst; 8 bursts to go [Q ]
+1540
+time 11784ms: Process A0 completed a CPU burst; 7 bursts to go [Q ]
+1552
+time 12392ms: Process A0 completed a CPU burst; 6 bursts to go [Q ]
+224
+time 13000ms: Process A0 completed a CPU burst; 5 bursts to go [Q ]
+52
+time 13608ms: Process A0 completed a CPU burst; 4 bursts to go [Q ]
+3548
+time 14216ms: Process A0 completed a CPU burst; 3 bursts to go [Q ]
+820
+time 14824ms: Process A0 completed a CPU burst; 2 bursts to go [Q ]
+920
+time 15432ms: Process A0 completed a CPU burst; 1 bursts to go [Q ]
+1876
+time 16040ms: Process A0 completed a CPU burst; 0 bursts to go [Q ]
