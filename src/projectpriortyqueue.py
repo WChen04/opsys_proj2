@@ -1,4 +1,4 @@
-from Process import Process
+from projectprocess import Process
 class PriorityQueue:
     '''
     Constructor
